@@ -56,7 +56,7 @@ export const getAllTechnicians = async (req: Request, res: Response) => {
     const endOfDay = new Date().setHours(23, 59, 59, 999);
 
     const data = technicians.map((tech: any) => {
-      const techObj = tech.toObject();
+      const techObj: any = tech.toObject();
       const todayAttendance = techObj.attendance?.find((att: any) => {
         const d = new Date(att.date).getTime();
         return d >= startOfDay && d <= endOfDay;
@@ -76,7 +76,7 @@ export const getTechnicianById = async (req: Request, res: Response) => {
     const technician = await Technician.findById(req.params.id);
     if (!technician) return res.status(404).json({ success: false, message: 'Technician not found' });
 
-    const techObj = technician.toObject();
+    const techObj: any = technician.toObject();
     const startOfDay = new Date().setHours(0, 0, 0, 0);
     const endOfDay = new Date().setHours(23, 59, 59, 999);
 

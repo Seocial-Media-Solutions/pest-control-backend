@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "tsx watch server.ts",
     "start": "node --import tsx server.ts",
+    "build": "tsc",
     "seed:users": "tsx src/utils/seed.users.ts",
     "seed:services": "tsx seed-services.ts",
     "test": "echo \"Error: no test specified\" && exit 1"

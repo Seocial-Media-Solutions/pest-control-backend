@@ -11,9 +11,12 @@ import dashboardRoutes from './src/routes/dashboard.routes.js';
 import customerRoutes from './src/routes/customer.routes.js';
 import bookingRoutes from './src/routes/booking.routes.js';
 import subServiceRoutes from './src/routes/subService.routes.js';
+import authRoutes from './src/routes/auth.routes.js';
 import connectDB from './src/config/db.config.js';
 import { TrackingGateway } from './src/modules/tracking/index.js';
 import cors from 'cors';
+import { limiter } from './src/middleware/rateLimiter.js';
+import { protect } from './src/middleware/auth.js';
 
 const app: Express = express();
 const PORT = process.env.PORT || 3000;
@@ -24,37 +27,43 @@ const httpServer = createServer(app);
 // Initialize Socket.IO with CORS
 const io = new SocketServer(httpServer, {
     cors: {
-        origin: 'http://localhost:5173',
+        origin: process.env.ADMINURL,
         methods: ['GET', 'POST'],
         credentials: true
     }
 });
-
-// Connect to Database
-connectDB();
 
 // Initialize Tracking Gateway (WebSocket)
 const trackingGateway = new TrackingGateway(io);
 console.log('✅ Tracking Gateway initialized');
 
 // Middleware
-app.use(cors({ origin: 'http://localhost:5173' }));
+app.use(cors({ origin: process.env.ADMINURL }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
-app.use('/api/health', healthRoutes);
-app.use('/api/services', serviceRoutes);
-app.use('/api', technicianRoutes);
-app.use('/api/tracking', trackingRoutes);
-app.use('/api/assignments', assignmentRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/customers', customerRoutes);
-app.use('/api/bookings', bookingRoutes);
-app.use('/api/sub-services', subServiceRoutes);
+// Apply Rate Limiting globally
+app.use(limiter);
 
-// WebSocket stats endpoint
-app.get('/api/tracking/ws/stats', (req: Request, res: Response) => {
+// Public Routes
+app.use('/api/health', healthRoutes);
+app.use('/api/auth', authRoutes); // Admin Login
+
+// Protected Routes
+app.use('/api/services', protect, serviceRoutes);
+app.use('/api/tracking', protect, trackingRoutes);
+app.use('/api/assignments', protect, assignmentRoutes);
+app.use('/api/dashboard', protect, dashboardRoutes);
+app.use('/api/customers', protect, customerRoutes);
+app.use('/api/bookings', protect, bookingRoutes);
+app.use('/api/sub-services', protect, subServiceRoutes);
+
+// For technicians, we need to allow login.
+// I will NOT add `protect` here at the top level for technicians, but will add it INSIDE `technician.routes.ts` for non-login routes.
+app.use('/api', technicianRoutes);
+
+// WebSocket stats endpoint (Protected)
+app.get('/api/tracking/ws/stats', protect, (req: Request, res: Response) => {
     const stats = trackingGateway.getStats();
     res.json({
         success: true,
@@ -108,13 +117,24 @@ app.use((req: Request, res: Response) => {
     });
 });
 
-// Start server with WebSocket support
-httpServer.listen(PORT, () => {
-    console.log(`🚀 Server is running on port ${PORT}`);
-    console.log(`📍 Health check: http://localhost:${PORT}/api/health`);
-    console.log(`📍 Detailed health: http://localhost:${PORT}/api/health/detailed`);
-    console.log(`🔌 WebSocket server is running on ws://localhost:${PORT}`);
-    console.log(`📊 WebSocket stats: http://localhost:${PORT}/api/tracking/ws/stats`);
-});
+// Connect to Database and start server
+const startServer = async () => {
+    try {
+        await connectDB();
+
+        httpServer.listen(PORT, () => {
+            console.log(`🚀 Server is running on port ${PORT}`);
+            console.log(`📍 Health check: http://localhost:${PORT}/api/health`);
+            console.log(`📍 Detailed health: http://localhost:${PORT}/api/health/detailed`);
+            console.log(`🔌 WebSocket server is running on ws://localhost:${PORT}`);
+            console.log(`📊 WebSocket stats: http://localhost:${PORT}/api/tracking/ws/stats`);
+        });
+    } catch (error) {
+        console.error('Failed to start server:', error);
+        process.exit(1);
+    }
+};
+
+startServer();
 
 export default app;

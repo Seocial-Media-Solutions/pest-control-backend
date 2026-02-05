@@ -6,7 +6,7 @@ import Technician from '../models/user.model.js';
 export const loginTechnician = async (req: Request, res: Response) => {
   try {
     const { username, password } = req.body;
-    const technician = await Technician.findOne({ username }).select('+password');
+    const technician: any = await Technician.findOne({ username }).select('+password');
 
     if (!technician || technician.password !== password) {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
@@ -123,7 +123,7 @@ export const markAttendance = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'Invalid status' });
     }
 
-    const technician = await Technician.findById(req.params.id);
+    const technician: any = await Technician.findById(req.params.id);
     if (!technician) return res.status(404).json({ success: false, message: 'Technician not found' });
 
     const targetDate = date ? new Date(date) : new Date();
@@ -155,7 +155,7 @@ export const markAttendance = async (req: Request, res: Response) => {
 export const getAttendanceByMonth = async (req: Request, res: Response) => {
   try {
     const { id, month } = req.params;
-    const technician = await Technician.findById(id);
+    const technician: any = await Technician.findById(id);
     if (!technician) return res.status(404).json({ success: false, message: 'Technician not found' });
 
     const now = new Date();

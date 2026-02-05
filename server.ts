@@ -23,11 +23,23 @@ const PORT = process.env.PORT || 3000;
 
 // Create HTTP server for Socket.IO
 const httpServer = createServer(app);
+// Middleware
+// Debug logging
+app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} | Origin: ${req.headers.origin}`);
+    next();
+});
+
+const allowedOrigins = [
+    process.env.ADMINURL,
+    'http://localhost:5173',
+    'http://127.0.0.1:5173'
+].filter(Boolean) as string[];
 
 // Initialize Socket.IO with CORS
 const io = new SocketServer(httpServer, {
     cors: {
-        origin: process.env.ADMINURL,
+        origin: allowedOrigins,
         methods: ['GET', 'POST'],
         credentials: true
     }
@@ -38,7 +50,14 @@ const trackingGateway = new TrackingGateway(io);
 console.log('✅ Tracking Gateway initialized');
 
 // Middleware
-app.use(cors({ origin: process.env.ADMINURL }));
+app.use(cors({
+    origin: (origin, callback) => {
+        // Allow ALL origins for debugging
+        console.log('CORS Origin Check:', origin);
+        return callback(null, true);
+    },
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -128,6 +147,7 @@ const startServer = async () => {
             console.log(`📍 Detailed health: http://localhost:${PORT}/api/health/detailed`);
             console.log(`🔌 WebSocket server is running on ws://localhost:${PORT}`);
             console.log(`📊 WebSocket stats: http://localhost:${PORT}/api/tracking/ws/stats`);
+            console.log('frontend url', process.env.ADMINURL);
         });
     } catch (error) {
         console.error('Failed to start server:', error);

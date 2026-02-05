@@ -47,7 +47,7 @@ export const updateServiceStatus = async (req: Request, res: Response) => {
         const subServiceId = req.params.subServiceId.trim();
         const { status } = req.body;
 
-        const assignment = await Assignment.findById(id);
+        const assignment: any = await Assignment.findById(id);
         if (!assignment) return res.status(404).json({ success: false, message: 'Assignment not found' });
         if (!assignment.bookingId) return res.status(400).json({ success: false, message: 'No linked booking' });
 
@@ -188,7 +188,7 @@ export const manageTreatmentPreparation = async (req: Request, res: Response) =>
         const { id, itemId } = req.params;
         const method = req.method;
 
-        const assignment = await Assignment.findById(id);
+        const assignment: any = await Assignment.findById(id);
         if (!assignment) return res.status(404).json({ success: false, message: 'Assignment not found' });
 
         if (method === 'POST') {
@@ -215,7 +215,7 @@ export const manageTreatmentPreparation = async (req: Request, res: Response) =>
 // Site Pictures
 export const addSitePicture = async (req: Request, res: Response) => {
     try {
-        const assignment = await Assignment.findById(req.params.id);
+        const assignment: any = await Assignment.findById(req.params.id);
         if (!assignment) return res.status(404).json({ success: false, message: 'Assignment not found' });
 
         let pictureData = req.body;
@@ -242,7 +242,7 @@ export const addSitePicture = async (req: Request, res: Response) => {
 export const deleteSitePicture = async (req: Request, res: Response) => {
     try {
         const { id, pictureId } = req.params;
-        const assignment = await Assignment.findById(id);
+        const assignment: any = await Assignment.findById(id);
         if (!assignment) return res.status(404).json({ success: false, message: 'Assignment not found' });
 
         // Cloudinary Delete
@@ -266,7 +266,7 @@ export const deleteSitePicture = async (req: Request, res: Response) => {
 export const managePayment = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const assignment = await populateAssignment(Assignment.findById(id)); // populate needed for booking update check
+        const assignment: any = await populateAssignment(Assignment.findById(id)); // populate needed for booking update check
         if (!assignment) return res.status(404).json({ success: false, message: 'Assignment not found' });
 
         if (req.method === 'DELETE') {

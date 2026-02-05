@@ -9,10 +9,31 @@ export const loginAdmin = async (req: Request, res: Response) => {
     try {
         const { email, password } = req.body;
 
+        // Normalize inputs
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email and password are required'
+            });
+        }
+
+        const normalizedEmail = email.toString().trim().toLowerCase();
+        const normalizedPassword = password.toString().trim();
+        const expectedEmail = process.env.adminEmail?.trim().toLowerCase();
+        const expectedPassword = process.env.adminPassword?.trim();
+
+        if (!expectedEmail || !expectedPassword) {
+            console.error('CRITICAL: Admin credentials not configured in environment variables');
+            return res.status(500).json({
+                success: false,
+                message: 'Server configuration error'
+            });
+        }
+
         // Check for hardcoded admin credentials
         if (
-            email === process.env.adminEmail &&
-            password === process.env.adminPassword
+            normalizedEmail === expectedEmail &&
+            normalizedPassword === expectedPassword
         ) {
             // Generate 6-digit OTP
             const otp = Math.floor(100000 + Math.random() * 900000).toString();

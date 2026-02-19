@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import Technician from '../models/user.model.js';
+import jwt from 'jsonwebtoken';
 
 // --- Auth & Core ---
 
@@ -19,7 +20,20 @@ export const loginTechnician = async (req: Request, res: Response) => {
     const techData: any = technician.toObject();
     delete techData.password;
 
-    res.status(200).json({ success: true, message: 'Login successful', data: techData });
+    // Generate JWT Token
+    const token = jwt.sign(
+      {
+        id: technician._id,
+        username: technician.username,
+        email: technician.email,
+        fullName: technician.fullName,
+        role: 'technician'
+      },
+      process.env.JWT_SECRET || 'fallback_secret',
+      { expiresIn: '30d' }
+    );
+
+    res.status(200).json({ success: true, message: 'Login successful', token, data: techData });
   } catch (err: any) {
     res.status(500).json({ success: false, message: 'Login failed', error: err.message });
   }

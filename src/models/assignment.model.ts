@@ -51,6 +51,8 @@ const assignmentSchema = new Schema(
             enum: ["pending", "in-progress", "completed", "cancelled"],
             default: "pending"
         }
+
+        
     },
     {
         timestamps: true,

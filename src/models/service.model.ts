@@ -23,22 +23,6 @@ const serviceSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'SubService'
     }],
-    metaKeywords: {
-        type: String,
-        required: true,
-    },
-    metaDescription: {
-        type: String,
-        required: true,
-    },
-    metaTitle: {
-        type: String,
-        required: true,
-    },
-    metaImage: {
-        type: String,
-        required: false,
-    },
 }, { timestamps: true });
 
 export default mongoose.model("Service", serviceSchema);

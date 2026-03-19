@@ -10,7 +10,7 @@ const populateAssignment = (query: any) => {
         .populate({
             path: 'bookingId',
             populate: [
-                { path: 'customerId', select: 'fullName email mobileNumber address' },
+                { path: 'customerId', select: 'fullName email mobileNo address' },
                 { path: 'subServiceIds.serviceId', select: 'title description startingPrice metaImage image' }
             ]
         })
@@ -135,7 +135,7 @@ export const createAssignment = async (req: Request, res: Response) => {
 
         // Auto-update booking status
         if (assignment.bookingId) {
-            await Booking.findByIdAndUpdate(assignment.bookingId, { status: 'in-progress' });
+            await Booking.findByIdAndUpdate(assignment.bookingId, { status: 'confirmed' });
         }
 
         const data = await populateAssignment(Assignment.findById(assignment._id));
@@ -174,6 +174,10 @@ export const assignTechnician = async (req: Request, res: Response) => {
         const { technicianId } = req.body;
         const assignment = await Assignment.findByIdAndUpdate(req.params.id, { technicianId }, { new: true });
         if (!assignment) return res.status(404).json({ success: false, message: 'Assignment not found' });
+
+        if (assignment.bookingId) {
+            await Booking.findByIdAndUpdate(assignment.bookingId, { status: 'confirmed' });
+        }
 
         const data = await populateAssignment(Assignment.findById(assignment._id));
         res.status(200).json({ success: true, message: 'Technician assigned', data });
@@ -281,6 +285,16 @@ export const managePayment = async (req: Request, res: Response) => {
             if (assignment.paymentCollection.amount > 0 && assignment.paymentCollection.paymentStatus === 'pending') {
                 assignment.paymentCollection.paymentStatus = 'completed';
                 assignment.paymentCollection.paymentDate = new Date();
+            }
+
+            // Update assignment status based on sum collected vs total
+            const servicePrice = assignment.bookingId?.totalAmount || 0;
+            const paidAmount = assignment.paymentCollection.amount || 0;
+
+            if (servicePrice > 0 && paidAmount >= servicePrice) {
+                assignment.status = 'completed';
+            } else if (paidAmount > 0) {
+                assignment.status = 'in-progress';
             }
         }
 

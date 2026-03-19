@@ -22,17 +22,12 @@ const customerSchema = new mongoose.Schema({
         trim: true,
         match: [/^[0-9]{10}$/, 'Please enter a valid 10-digit mobile number']
     },
-    password: {
+
+    googleMapLink: {
         type: String,
-        required: [true, 'Password is required'],
-        minlength: [6, 'Password must be at least 6 characters long'],
-        select: false
-    },
-    address: {
-        type: String,
-        required: [true, 'Address is required'],
+        required: [true, 'Google Map Link is required'],
         trim: true,
-        minlength: [10, 'Address must be at least 10 characters long']
+        match: [/^https?:\/\/(?:www\.)?(?:google\.com\/maps|maps\.app\.goo\.gl|maps\.google\.com).*$/, 'Please enter a valid Google Maps link']
     },
     status: {
         type: String,

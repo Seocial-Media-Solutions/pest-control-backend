@@ -21,13 +21,11 @@ const bookingSchema = new mongoose.Schema({
     }],
     additionalAddress: {
         type: String,
-        required: [true, 'Service address is required'],
         trim: true,
-        minlength: [10, 'Address must be at least 10 characters long']
     },
     additionalMobileNo: {
         type: String,
-        required: [true, 'Contact mobile number is required'],
+
         trim: true,
         match: [/^[0-9]{10}$/, 'Invalid mobile number']
     },
@@ -54,6 +52,11 @@ const bookingSchema = new mongoose.Schema({
     totalAmount: {
         type: Number,
         default: 0
+    },
+    plan: {
+        type: String,
+        enum: ['single', 'monthly', 'quarterly', 'amc'],
+        default: 'single'
     }
 }, {
     timestamps: true,

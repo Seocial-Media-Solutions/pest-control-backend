@@ -26,10 +26,7 @@ const subServiceSchema = new mongoose.Schema({
         type: String,
         trim: true,
     },
-    metaKeywords: String,
-    metaDescription: String,
-    metaTitle: String,
-    metaImage: String,
+    
 }, { timestamps: true });
 
 export default mongoose.model("SubService", subServiceSchema);

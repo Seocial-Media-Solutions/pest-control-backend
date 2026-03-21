@@ -1,8 +1,7 @@
 import { v2 as cloudinary } from 'cloudinary';
-import multerStorageCloudinary from 'multer-storage-cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
 // Force restart
 
-const { CloudinaryStorage } = multerStorageCloudinary;
 import multer from 'multer';
 import dotenv from 'dotenv';
 

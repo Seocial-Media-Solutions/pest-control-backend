@@ -6,12 +6,12 @@ import SubService from '../models/subService.model.js';
 const populateBooking = (query) => {
     return query
         .populate('customerId', 'fullName email mobileNo address')
-        .populate('subServiceIds.serviceId', 'title description startingPrice metaImage');
+        .populate('subServiceIds.serviceId');
 };
 // --- CRUD Controllers ---
 export const createBooking = async (req, res) => {
     try {
-        const { customerId, subServiceIds, additionalAddress, additionalMobileNo, deadlineDate } = req.body;
+        const { customerId, subServiceIds, additionalAddress, additionalMobileNo, deadlineDate, plan } = req.body;
         const customer = await Customer.findById(customerId);
         if (!customer)
             return res.status(404).json({ status: 'error', message: 'Customer not found' });
@@ -34,7 +34,8 @@ export const createBooking = async (req, res) => {
             additionalAddress,
             additionalMobileNo,
             deadlineDate: new Date(deadlineDate),
-            totalAmount
+            totalAmount,
+            plan: plan || 'single'
         });
         const data = await populateBooking(Booking.findById(booking._id));
         res.status(201).json({ status: 'success', message: 'Booking created successfully', data: { booking: data } });

@@ -14,7 +14,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module",
   "dependencies": {
     "@types/cors": "^2.8.19",
     "@types/jsonwebtoken": "^9.0.10",

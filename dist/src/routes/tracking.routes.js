@@ -1,5 +1,5 @@
 import express from 'express';
-import { createTracking, getAllTracking, getTrackingById, getLatestTrackingByTechnician, updateTracking, deleteTracking, getTrackingNearby } from '../controllers/tracking.controller';
+import { createTracking, getAllTracking, getTrackingById, getLatestTrackingByTechnician, updateTracking, deleteTracking, getTrackingNearby } from '../controllers/tracking.controller.js';
 const router = express.Router();
 // Create a new tracking record
 router.post('/', createTracking);

@@ -2,7 +2,7 @@ import Customer from '../models/customer.model.js';
 // --- Auth Controllers ---
 export const signupCustomer = async (req, res) => {
     try {
-        const { fullName, email, mobileNo, password, address, status } = req.body;
+        const { fullName, email, mobileNo, googleMapLink, status } = req.body;
         const existingCustomer = await Customer.findOne({ $or: [{ email }, { mobileNo }] });
         if (existingCustomer) {
             return res.status(400).json({
@@ -16,12 +16,10 @@ export const signupCustomer = async (req, res) => {
             fullName,
             email,
             mobileNo,
-            password,
-            address,
+            googleMapLink,
             status: status || 'temporary'
         });
         const customerResponse = customer.toObject();
-        delete customerResponse.password;
         res.status(201).json({ status: 'success', message: 'Customer registered successfully', data: customerResponse });
     }
     catch (error) {
@@ -29,22 +27,7 @@ export const signupCustomer = async (req, res) => {
     }
 };
 export const loginCustomer = async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        const customer = await Customer.findOne({ email }).select('+password');
-        if (!customer || customer.password !== password) {
-            return res.status(401).json({ status: 'error', message: 'Invalid credentials' });
-        }
-        if (!customer.isActive) {
-            return res.status(403).json({ status: 'error', message: 'Account deactivated' });
-        }
-        const customerResponse = customer.toObject();
-        delete customerResponse.password;
-        res.status(200).json({ status: 'success', message: 'Login successful', data: customerResponse });
-    }
-    catch (error) {
-        res.status(500).json({ status: 'error', message: 'Login failed', error: error.message });
-    }
+    return res.status(400).json({ status: 'error', message: 'Customer login not supported currently' });
 };
 // --- CRUD Controllers ---
 export const getAllCustomers = async (req, res) => {
@@ -97,7 +80,7 @@ export const getCustomerById = async (req, res) => {
 };
 export const createCustomer = async (req, res) => {
     try {
-        const { fullName, email, mobileNo, address, status, notes, password } = req.body;
+        const { fullName, email, mobileNo, googleMapLink, status, notes } = req.body;
         const existingCustomer = await Customer.findOne({ $or: [{ email }, { mobileNo }] });
         if (existingCustomer) {
             return res.status(400).json({
@@ -111,8 +94,7 @@ export const createCustomer = async (req, res) => {
             fullName,
             email,
             mobileNo,
-            password: password || 'Customer@123',
-            address,
+            googleMapLink,
             status: status || 'temporary',
             notes: notes || ''
         });

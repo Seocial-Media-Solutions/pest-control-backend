@@ -1,5 +1,6 @@
 import Service from '../models/service.model.js';
 import SubService from '../models/subService.model.js';
+import cloudinary from '../config/cloudinary.js';
 // Helper to handle formData 'undefined' string or empty values
 const parseFormData = (val) => {
     if (val === 'undefined' || val === undefined || val === null)
@@ -83,10 +84,6 @@ export const createService = async (req, res) => {
             description: data.description,
             image,
             services: [], // Start empty, will populate if subservices are passed
-            metaKeywords: data.metaKeywords || '',
-            metaDescription: data.metaDescription || data.description,
-            metaTitle: data.metaTitle || data.title,
-            metaImage: data.metaImage || image
         });
         // Parse services if stringified (for initial seeding or full creation)
         let subServicesData = data.services;
@@ -164,7 +161,28 @@ export const deleteService = async (req, res) => {
             res.status(404).json({ success: false, message: 'Service not found' });
             return;
         }
-        // Delete all associated sub-services first
+        // Delete parent service image from cloudinary
+        if (service.image && service.image.includes('cloudinary.com')) {
+            try {
+                const parts = service.image.split('/');
+                const publicId = `${parts[parts.length - 2]}/${parts[parts.length - 1].split('.')[0]}`;
+                await cloudinary.uploader.destroy(publicId);
+            }
+            catch (err) { }
+        }
+        // Get all associated sub-services
+        const subServices = await SubService.find({ serviceId: service._id });
+        for (const sub of subServices) {
+            if (sub.image && sub.image.includes('cloudinary.com')) {
+                try {
+                    const parts = sub.image.split('/');
+                    const publicId = `${parts[parts.length - 2]}/${parts[parts.length - 1].split('.')[0]}`;
+                    await cloudinary.uploader.destroy(publicId);
+                }
+                catch (err) { }
+            }
+        }
+        // Delete all associated sub-services
         await SubService.deleteMany({ serviceId: service._id });
         await service.deleteOne();
         res.status(200).json({ success: true, message: 'Service and sub-services deleted successfully', data: {} });
@@ -189,16 +207,16 @@ export const addSubService = async (req, res) => {
         let image = parseFormData(data.image);
         if (req.file)
             image = req.file.path;
+        if (!image) {
+            res.status(400).json({ success: false, message: 'Sub-service image is required' });
+            return;
+        }
         const subService = await SubService.create({
             serviceId: service._id,
             title: data.title,
             description: data.description,
             startingPrice: data.startingPrice,
-            image,
-            metaKeywords: data.metaKeywords,
-            metaDescription: data.metaDescription,
-            metaTitle: data.metaTitle,
-            metaImage: data.metaImage
+            image
         });
         service.services.push(subService._id);
         await service.save();
@@ -249,11 +267,26 @@ export const deleteSubService = async (req, res) => {
             res.status(404).json({ success: false, message: 'Service not found' });
             return;
         }
-        const subService = await SubService.findByIdAndDelete(req.params.subServiceId);
+        const subService = await SubService.findById(req.params.subServiceId);
         if (!subService) {
             res.status(404).json({ success: false, message: 'Sub-service not found' });
             return;
         }
+        // Delete image from cloudinary if it exists
+        if (subService.image && subService.image.includes('cloudinary.com')) {
+            try {
+                const parts = subService.image.split('/');
+                const fileWithExt = parts[parts.length - 1];
+                const folder = parts[parts.length - 2];
+                const filename = fileWithExt.split('.')[0];
+                const publicId = `${folder}/${filename}`;
+                await cloudinary.uploader.destroy(publicId);
+            }
+            catch (err) {
+                console.error('Failed to delete sub-service image from cloudinary', err);
+            }
+        }
+        await subService.deleteOne();
         // Remove from parent service array
         service.services = service.services.filter((id) => id.toString() !== req.params.subServiceId);
         await service.save();

@@ -26,7 +26,6 @@ const PORT = process.env.PORT || 3000;
 /* ---------------------- ALLOWED ORIGINS ---------------------- */
 
 const allowedOrigins = [
-  "http://localhost:5173",
   process.env.ADMINURL
 ].filter(Boolean) as string[];
 
